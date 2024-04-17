@@ -1,0 +1,64 @@
+version: '3'
+
+tasks:
+  default:
+    cmds:
+      - task -l
+  make:
+    cmds:
+      - pipreqs --force src/inwell.py
+      - pyinstaller --onefile src/inkwell.py
+      - task: install
+  install:
+    cmds:
+      - cp dist/inkwell /usr/local/bin/inkwell
+      - chmod +x /usr/local/bin/inkwell
+  set-version:
+    vars:
+      version: '{{default "0.0.0" .CLI_ARGS}}'
+    cmds:
+      - awk '/^__version__/ { print "__version__ = \"{{.version}}\""; next }1' src/inkwell.py > temp && mv temp src/inkwell.py
+  release:
+    desc: Create a new release, task release -- [patch|minor|major]
+    vars:
+      STEP: '{{default "patch" .CLI_ARGS}}'
+    cmds:
+      - |
+        STEP="{{.STEP}}"
+        
+        # Only allowed on main branch
+        if [ "$(git rev-parse --abbrev-ref HEAD)" != "main" ]; then
+          echo "Only allowed on main branch"
+          exit 1
+        fi
+        
+        VERSION=$(gh release list | sort -r | head -n1 | awk '{print $1}')
+        MAJOR=$(echo $VERSION | cut -d. -f1 | cut -c2-)
+        MINOR=$(echo $VERSION | cut -d. -f2)
+        PATCH=$(echo $VERSION | cut -d. -f3)
+        
+        echo "Current version: $VERSION"
+        if [ "$STEP" = "major" ]; then
+          MAJOR=$((MAJOR+1))
+          MINOR=0
+          PATCH=0
+        elif [ "$STEP" = "minor" ]; then
+          MINOR=$((MINOR+1))
+          PATCH=0
+        elif [ "$STEP" = "patch" ]; then
+          PATCH=$((PATCH+1))
+        else
+          echo "Invalid step: $STEP"
+          exit 1
+        fi
+        VERSION="v$MAJOR.$MINOR.$PATCH"
+        echo "New version: $VERSION"
+        
+        task set-version -- $VERSION
+        task make
+        task set-version
+
+        gh release create "$VERSION" --generate-notes --target main ./dist/inkwell
+        gh release delete latest
+        gh release create latest --generate-notes --target main ./dist/inkwell
+    silent: true
