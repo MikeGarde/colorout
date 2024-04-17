@@ -42,3 +42,11 @@ drwx------@  7 me  staff    224 Dec 12 09:13 <span style="color:blue">src</span>
 ```shell
 task make
 ```
+
+### Release
+
+Version bumping is done using [patch, minor, major] as arguments to the `release` task.
+
+```shell
+task release -- minor
+```
