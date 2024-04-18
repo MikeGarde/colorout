@@ -33,14 +33,22 @@ drwx------   5 me  staff    160 Apr 17 17:03 <span style="color:blue">dist</span
 drwx------@  7 me  staff    224 Dec 12 09:13 <span style="color:blue">src</span>
 </pre>
 
-## Develop
+## Develop / Build
 
  - Install [Taskfile](https://taskfile.dev/installation/)
- - Install [pipreqs](https://pypi.org/project/pipreqs/)
- - Install [pyinstaller](https://pyinstaller.org/en/stable/)
+ - Install [pipreqs](https://pypi.org/project/pipreqs/) `pip install pipreqs`
+ - Install [pyinstaller](https://pyinstaller.org/en/stable/) `pip install pyinstaller`
 
 ```shell
+python3 -m venv .venv
+source .venv/bin/activate
 task make
+```
+
+### Test
+
+```shell
+ls -la --color=always | python src/inkwell.py
 ```
 
 ### Release

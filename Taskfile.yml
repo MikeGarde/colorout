@@ -6,13 +6,15 @@ tasks:
       - task -l
   make:
     cmds:
-      - pipreqs --force src/inwell.py
       - pyinstaller --onefile src/inkwell.py
+      - chmod +x dist/inkwell
       - task: install
   install:
     cmds:
       - cp dist/inkwell /usr/local/bin/inkwell
-      - chmod +x /usr/local/bin/inkwell
+  reqs:
+    cmds:
+      - pipreqs --force src/inkwell.py
   set-version:
     vars:
       version: '{{default "0.0.0" .CLI_ARGS}}'

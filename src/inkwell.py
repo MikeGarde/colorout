@@ -7,69 +7,82 @@ __version__ = "0.0.0"
 __version_info__ = tuple([int(num) for num in __version__.split('.')])
 
 closer = r'\x1b\[0m|\x1b\[39;49m'
+starter = r'\x1b\['
 
 # Define ANSI color codes
 ansi_codes = {
-    'bold':      r'\x1b\[1m',
-    'underline': r'\x1b\[4m',
-    'red':       r'\x1b\[31m',
-    'green':     r'\x1b\[32m',
-    'yellow':    r'\x1b\[33m',
-    'blue':      r'\x1b\[34m',
-    'magenta':   r'\x1b\[35m',
-    'cyan':      r'\x1b\[36m',
-    'white':     r'\x1b\[37m',
+    1: 'bold',
+    4: 'underline',
+    31: 'red',
+    32: 'green',
+    33: 'yellow',
+    34: 'blue',
+    35: 'magenta',
+    36: 'cyan',
+    37: 'white',
 }
 
 # Define HTML and Markdown replacements
-md_tags = {
-    'bold':      ('<span style="font-weight:bold">', '</span>'),
-    'underline': ('<span style="text-decoration:underline">', '</span>'),
-    'red':       ('<span style="color:red">', '</span>'),
-    'green':     ('<span style="color:green">', '</span>'),
-    'yellow':    ('<span style="color:yellow">', '</span>'),
-    'blue':      ('<span style="color:blue">', '</span>'),
-    'magenta':   ('<span style="color:magenta">', '</span>'),
-    'cyan':      ('<span style="color:cyan">', '</span>'),
-    'white':     ('<span style="color:white">', '</span>'),
+tags = {
+    'bold':      'font-weight',
+    'underline': 'text-decoration',
+    'red':       'color',
+    'green':     'color',
+    'yellow':    'color',
+    'blue':      'color',
+    'magenta':   'color',
+    'cyan':      'color',
+    'white':     'color',
 }
 
 # Parse command line arguments
 parser = argparse.ArgumentParser()
 parser.add_argument('--version', action='version', version='%(prog)s ' + __version__)
-parser.add_argument('--md', action='store_true')
-parser.add_argument('--html', action='store_true')
 parser.add_argument('--file', type=str)
+parser.add_argument('--debug', action='store_true')
 args = parser.parse_args()
 
-if args.md and args.html:
-    print("Error: Cannot use --md and --html flags together.")
-    sys.exit(1)
-if not args.md and not args.html:
-    args.md = True
 
+def line_worker(single_line):
+    pattern = r"(\x1b\[0m)?\x1b\[([0-9]{1,2});?([0-9]{1,2})?m(.*)?\x1b\[[0-9]{1,2}(;[0-9]{1,2})?m"
+    matches = re.findall(pattern, single_line)
 
-def line_worker(line):
-    # Replace bold ANSI code first
-    def replacer(m):
-        return f'{md_tags["bold"][0]}{m.group(1)}{md_tags["bold"][1]}'
+    if args.debug:
+        print(matches)
 
-    line = re.sub(f'{ansi_codes["bold"]}(.*?)(?={closer})', replacer, line)
-    # Replace ANSI color codes with HTML or Markdown
-    for code in ansi_codes:
-        if code == "bold":
-            continue
-        # Find all occurrences of the current ANSI code
-        matches = re.findall(f'{ansi_codes[code]}(.*?)(?={closer})', line)
+    for match in matches:
+        foreground = int(match[1])
+        background = int(match[2])
 
-        # Replace each occurrence with the corresponding HTML tag
-        for match in matches:
-            def replacer(m):
-                return f'{md_tags[code][0]}{m.group(1)}{md_tags[code][1]}'
+        if foreground in ansi_codes:
+            foreground = ansi_codes[foreground]
+        else:
+            if args.debug:
+                print(f"Error: Unknown ANSI code {foreground}")
+            foreground = None
 
-            line = re.sub(f'{ansi_codes[code]}(.*?)(?={closer})', replacer, line)
+        if background in ansi_codes:
+            background = ansi_codes[background]
+        else:
+            if args.debug:
+                print(f"Error: Unknown ANSI code {background}")
+            background = None
 
-    print(line, end='')
+        text = match[3]
+
+        if args.debug:
+            print(f"Foreground: {foreground}, Background: {background}, Text: {text}")
+
+        # Replace ANSI color codes with HTML or Markdown
+        span = "<span style='"
+        if foreground:
+            span += tags[foreground] + ": " + foreground + ";"
+        if background:
+            span += tags[background] + ": " + background + ";"
+        span += "'>" + text + "</span>"
+
+        new_line = re.sub(pattern, span, single_line)
+        print(new_line, end='')
 
 
 if args.file:
