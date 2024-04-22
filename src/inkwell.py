@@ -1,7 +1,7 @@
-import os
-import sys
-import re
 import argparse
+import os
+import re
+import sys
 
 __version__ = "0.0.0"
 __version_info__ = tuple([int(num) for num in __version__.split('.')])
@@ -36,11 +36,25 @@ tags = {
 }
 
 # Parse command line arguments
-parser = argparse.ArgumentParser()
+parser = argparse.ArgumentParser(
+    description='Convert ANSI color codes to HTML or Markdown.',
+)
 parser.add_argument('--version', action='version', version='%(prog)s ' + __version__)
-parser.add_argument('--file', type=str)
+parser.add_argument('--html', action='store_true', help='output as html')
+parser.add_argument('--title', type=str, metavar='\'ls -la\'', help='title for html output')
 parser.add_argument('--debug', action='store_true')
+parser.add_argument('file', type=str, nargs='?', metavar='input.txt', help='read from file instead of stdin')
 args = parser.parse_args()
+
+# Supplying a title implies HTML output
+if args.title:
+    args.html = True
+if args.html:
+    html_start = f"<html><head><title>{args.title}</title></head><body><pre>"
+    html_end = "</pre></body></html>"
+else:
+    html_start = ""
+    html_end = ""
 
 
 def line_worker(single_line):
@@ -90,13 +104,16 @@ if args.file:
     # Read from file
     try:
         with open(full_path, 'r') as f:
-            for line in f:
-                line_worker(line)
+            source = f
     except FileNotFoundError:
         print(f"Error: File {full_path} not found.")
     except PermissionError:
         print(f"Error: Permission denied to read file {full_path}.")
 else:
-    # Read from stdin
-    for line in sys.stdin:
-        line_worker(line)
+    source = sys.stdin
+
+# Output
+print(html_start) if args.html else None
+for line in source:
+    line_worker(line)
+print(html_end) if args.html else None

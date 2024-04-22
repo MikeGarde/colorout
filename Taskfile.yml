@@ -13,8 +13,9 @@ tasks:
     cmds:
       - cp dist/inkwell /usr/local/bin/inkwell
   reqs:
+    dir: src
     cmds:
-      - pipreqs --force src/inkwell.py
+      - pipreqs --force
   set-version:
     vars:
       version: '{{default "0.0.0" .CLI_ARGS}}'
