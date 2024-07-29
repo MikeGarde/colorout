@@ -1,6 +1,6 @@
 # inkwell
 
-Retain Bash Color Output for MD or HTML files.
+Retain Bash Color Output for use in MD or HTML files.
 
 ## Install
 
@@ -17,10 +17,11 @@ chmod +x /usr/local/bin/inkwell
 ls -la --color=always | inkwell
 ```
 
-Output to file: [examples/ls-wls.html](https://mikegarde.github.io/inkwell/examples/ls-wls.html)
+With output to file
+ * [examples / ls-wls.html](https://mikegarde.github.io/inkwell/examples/ls-wls.html)
 
 ```shell
-COMMAND="ls -la --color=always"
+COMMAND="ls -la --color"
 $COMMAND | inkwell --title $COMMAND > examples/ls-wls.html
 ```
 
@@ -36,6 +37,7 @@ python3 -m venv .venv
 source .venv/bin/activate
 pip install pipreqs pyinstaller
 pip install -r src/requirements.txt
+# And make
 task make
 ```
 
