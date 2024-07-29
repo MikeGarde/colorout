@@ -40,8 +40,8 @@ parser = argparse.ArgumentParser(
     description='Convert ANSI color codes to HTML or Markdown.',
 )
 parser.add_argument('--version', action='version', version='%(prog)s ' + __version__)
-parser.add_argument('--html', action='store_true', help='output as html')
-parser.add_argument('--title', type=str, metavar='\'ls -la\'', help='title for html output')
+parser.add_argument('--html', action='store_true', help='wrap output with html tags')
+parser.add_argument('--title', type=str, metavar='\'ls -la\'', help='title for html output, invokes html flag')
 parser.add_argument('--debug', action='store_true')
 parser.add_argument('file', type=str, nargs='?', metavar='input.txt', help='read from file instead of stdin')
 args = parser.parse_args()
@@ -65,19 +65,19 @@ def line_worker(single_line):
         print(matches)
 
     for match in matches:
-        foreground = int(match[1])
-        background = int(match[2])
+        foreground = int(match[1]) if match[1] else None
+        background = int(match[2]) if match[2] else None
 
         if foreground in ansi_codes:
             foreground = ansi_codes[foreground]
-        else:
+        elif foreground:
             if args.debug:
                 print(f"Error: Unknown ANSI code {foreground}")
             foreground = None
 
         if background in ansi_codes:
             background = ansi_codes[background]
-        else:
+        elif background:
             if args.debug:
                 print(f"Error: Unknown ANSI code {background}")
             background = None
