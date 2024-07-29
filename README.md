@@ -46,5 +46,5 @@ task make
 Version bumping is done using [patch, minor, major] as arguments to the `release` task.
 
 ```shell
-task release -- minor
+task release:minor
 ```

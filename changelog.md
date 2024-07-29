@@ -12,6 +12,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - This changelog.md file
 - Taskfile script for assisting in updating this changelog.md file
 
+### Changed
+
+- Update to release task command, from `task release -- minor` to `task release:minor`
+
 ## [0.1.0] - 2024-07-29
 
 ### Fixed
