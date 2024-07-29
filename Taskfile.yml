@@ -34,7 +34,7 @@ tasks:
           fi
     cmds:
       - |
-        VERSION=$(gh release list --json tagName | jq -r '.[] | .tagName' | sort -V | tail -n 1)
+        VERSION=$(gh release list --json tagName | jq -r '.[] | .tagName' | sort -V | tail -n1 | head -n1)
         MAJOR=$(echo $VERSION | cut -d. -f1)
         MINOR=$(echo $VERSION | cut -d. -f2)
         PATCH=$(echo $VERSION | cut -d. -f3)
