@@ -4,6 +4,7 @@ tasks:
   default:
     cmds:
       - task -l
+
   make:
     cmds:
       - pyinstaller --onefile src/inkwell.py
@@ -16,11 +17,48 @@ tasks:
     dir: src
     cmds:
       - pipreqs --force
+
   set-version:
     vars:
       version: '{{default "0.0.0" .CLI_ARGS}}'
     cmds:
       - awk '/^__version__/ { print "__version__ = \"{{.version}}\""; next }1' src/inkwell.py > temp && mv temp src/inkwell.py
+
+  changelog:
+    desc: Append the latest version to the changelog
+    dir: ./
+    vars:
+      version: '{{default "0.0.0" .CLI_ARGS}}'
+      date: '{{now | date "2006-01-02"}}'
+    cmds:
+      - |
+        insert_line() {
+          local line_number="$1"
+          local new_line="$2"
+          sed -i '' "${line_number}a\\
+        ${new_line}\\
+        \\
+        " changelog.md
+        }
+        insert_line 7 "## [{{.version}}] - {{.date}}"
+        insert_line 9 "### Added"
+        insert_line 11 "### Changed"
+        insert_line 13 "### Fixed"
+        insert_line 15 "### Removed"
+        
+        footer_index=$(grep -n '^\[' changelog.md | cut -d: -f1 | head -n2 | tail -n1)
+        last_version=$(sed -n "${footer_index}p" changelog.md | grep -o '\[.*\]' | head -n1 | tr -d '[]')
+        existing_footer=$(tail -n +$footer_index changelog.md)
+        
+        new_version_link="[{{.version}}]: https://github.com/mikegarde/inkwell/compare/$last_version...{{.version}}"
+        
+        head -n $((footer_index-1)) changelog.md > tmp_changelog.md
+        echo "$new_version_link" >> tmp_changelog.md
+        echo "$existing_footer" >> tmp_changelog.md
+        sed -i '' "/\[unreleased\]:/s/$last_version/{{.version}}/" tmp_changelog.md
+        mv tmp_changelog.md changelog.md
+    silent: true
+
   release:*:
     desc: Create a new release, task release -- [patch|minor|major]
     vars:
@@ -62,7 +100,8 @@ tasks:
 
         gh release create "$VERSION" --generate-notes --target {{.BRANCH}} {{.PRERELEASE}} ./dist/inkwell
         if [ "{{.BRANCH}}" = "main" ]; then
-          gh release delete latest
-          gh release create latest --generate-notes --target main ./dist/inkwell
+          gh release delete latest --yes
+          git push origin --delete latest
+          gh release create latest --generate-notes --target main --latest=false ./dist/inkwell
         fi
     silent: true
