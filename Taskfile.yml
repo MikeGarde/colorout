@@ -98,7 +98,7 @@ tasks:
         task make
         task set-version
 
-        gh release create "$VERSION" --generate-notes --target {{.BRANCH}} {{.PRERELEASE}} ./dist/inkwell
+        gh release create "$VERSION" -F changelog.md --target {{.BRANCH}} {{.PRERELEASE}} ./dist/inkwell
         if [ "{{.BRANCH}}" = "main" ]; then
           gh release delete latest --yes
           git push origin --delete latest
